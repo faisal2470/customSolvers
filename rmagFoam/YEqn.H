@@ -15,7 +15,7 @@ volScalarField meanMolarMass(
     {
        meanMolarMass += Y[i]/thermo.composition().W(i);
     }
-   
+
     meanMolarMass = 1/meanMolarMass;
 
 tmp<fv::convectionScheme<scalar>> mvConvection(
@@ -90,9 +90,9 @@ tmp<fv::convectionScheme<scalar>> mvConvection(
             // Assign values to magdiff_Yi based on the scalingFactor, Yi, and summationTerm
             magdiff_Yi = scalingFactor * Yi * summationTerm;
 
-            volVectorField &diffVelocity_Yi = const_cast<volVectorField &>(mesh.lookupObject<volVectorField>("diffVelocity_" + speciesName));
+            volVectorField &diffFlux_Yi = const_cast<volVectorField &>(mesh.lookupObject<volVectorField>("diffFlux_" + speciesName));
 
-            diffVelocity_Yi = -(((turbulence->alphaEff()* fvc::grad(Yi)) / rho) - ((turbulence->alphaEff() * magdiff_Yi) / rho));
+            diffFlux_Yi = -(((turbulence->alphaEff()* fvc::grad(Yi)) / rho) - ((turbulence->alphaEff() * magdiff_Yi) / rho));
 
             fvScalarMatrix YiEqn(
                 fvm::ddt(rho, Yi) + mvConvection->fvmDiv(phi, Yi) - fvm::laplacian(turbulence->alphaEff(), Yi) + fvc::div(turbulence->alphaEff() * magdiff_Yi) ==

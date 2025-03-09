@@ -18,10 +18,10 @@
     // Access predefined fields for magnetic susceptibility and magnetic force
 
     const volVectorField &magneticForce_Yj = mesh.lookupObject<volVectorField>("magneticForce_" + Yj.name());
-    const volVectorField &diffVelocity_Yj = mesh.lookupObject<volVectorField>("diffVelocity_" + Yj.name());
+    const volVectorField &diffFlux_Yj = mesh.lookupObject<volVectorField>("diffFlux_" + Yj.name());
 
     // Accumulate the magnetic work contribution: rho * Yi * (magneticForce_Yi · U)
-    magneticWork += (magneticForce_Yj & diffVelocity_Yj);
+    magneticWork += (magneticForce_Yj & diffFlux_Yj);
   }
 
   fvScalarMatrix EEqn(

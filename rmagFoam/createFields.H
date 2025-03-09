@@ -244,7 +244,7 @@ dimensionedScalar gL("gL", dimless, 2.0); // dimensionless
 
 // Bohr magneton (muB) [J/T] = [M L^2 T^-2 A^-1]
 const dimensionSet dimBohrMagneton = dimEnergy / (dimMagneticField); // [M L^2 T^-2 A^-1]
-dimensionedScalar muB("muB", dimBohrMagneton, 9.274e-24); 
+dimensionedScalar muB("muB", dimBohrMagneton, 9.274e-24);
 
 // Boltzmann constant (k) [J/K]
 dimensionedScalar k("k", dimEnergy / dimTemperature, 1.38e-23);
@@ -294,7 +294,7 @@ forAll(Y, i)
 
         new volVectorField(
         IOobject(
-            "diffVelocity_" + speciesName,
+            "diffFlux_" + speciesName,
             runTime.timeName(),
             mesh,
             IOobject::NO_READ,
@@ -306,5 +306,5 @@ forAll(Y, i)
     );
 
     // Store magneticForce in the object registry
-    
+
 }
