@@ -122,13 +122,22 @@ IOdictionary magneticProperties(
         IOobject::NO_WRITE));
 
 //Magnetic field block
-Info << "Reading magnetic flux density B\n"
-     << endl;
+Info << "Reading magnetic Properties\n" << endl;
 
 scalar B0 = magneticProperties.lookupOrDefault<scalar>("B0", 0.52);
-scalar k1 = magneticProperties.lookupOrDefault<scalar>("k1", 120.0);// Default to 100 mm^-1
+scalar k1 = magneticProperties.lookupOrDefault<scalar>("k1", 120.0);                        // Default to 120 m^-1
+vector gradDir = magneticProperties.lookupOrDefault<vector>("gradDir", vector(0, 1, 0));
 
-const dimensionSet dimMagneticField(1, 0, -2, 0, 0, -1, 0); // Tesla
+// Normalize the gradient direction
+scalar gradMag = mag(gradDir);
+if (gradMag < SMALL) gradMag = 1.0;     // Avoid division by zero
+gradDir /= gradMag;
+
+Info << "Configured B0: " << B0 << " T" << endl;
+Info << "Configured k1: " << k1 << " mm^-1" << endl;
+Info << "Configured gradDir: " << gradDir << endl;
+
+const dimensionSet dimMagneticField(1, 0, -2, 0, 0, -1, 0);     // Tesla
 volVectorField B(
     IOobject(
         "B",
@@ -139,45 +148,29 @@ volVectorField B(
     mesh,
     dimensionedVector("zero", dimMagneticField, vector::zero) // Initialize with zero values
 );
-Info << "Configured B0: " << B0 << " T" << endl;
-Info << "Configured k1: " << k1 << " mm^-1" << endl;
+
 
 forAll(B, cellI)
 {
-    const scalar y = mesh.C()[cellI].y(); // Get the y-coordinate of each cell's center
-
-    if (y < 0)
-    {
-        B[cellI] = vector(0, B0, 0); // Set B to 0.52 if y < 0
-    }
-    else
-    {
-        B[cellI] = vector(0, B0 * Foam::exp(-k1 * y), 0); // Use the exponential expression if y >= 0
-    }
-
+    const vector cellPos = mesh.C()[cellI];         // Get cell center position
+    scalar r = cellPos & gradDir;                   // Project cell position onto gradient direction
+    scalar BMag = B0 * Foam::exp(-k1 * r);          // Example B = 0.52 * exp(-100 * y)
+    B[cellI] = BMag * gradDir;                      // Set magnetic field
 }
 
 forAll(B.boundaryField(), patchI)
 {
-    fvPatchField<vector>& patchField = const_cast<fvPatchField<vector>&>(B.boundaryField()[patchI]); // Cast away const for modification
-    const pointField& faceCenters = patchField.patch().Cf(); // Get face centers of the patch
+    fvPatchField<vector>& patchField = const_cast<fvPatchField<vector>&>(B.boundaryField()[patchI]);    // Cast away const for modification
+    const pointField& faceCenters = patchField.patch().Cf();                                            // Get face centers of the patch
 
     forAll(patchField, faceI)
     {
-        const scalar y = faceCenters[faceI].y(); // y-coordinate of the face center
-
-        if (y < 0)
-        {
-            patchField[faceI] = vector(0, B0, 0);
-        }
-        else
-        {
-            patchField[faceI] = vector(0, B0 * Foam::exp(-k1 * y), 0);
-        }
+        const vector facePos = faceCenters[faceI];  // Get face center position
+        scalar r = facePos & gradDir;               // Project face position onto gradient direction
+        scalar BMag = B0 * Foam::exp(-k1 * r);      // Example B = 0.52 * exp(-100 * y)
+        patchField[faceI] = BMag * gradDir;         // Set magnetic field
     }
 }
-
-
 
 
 const dimensionSet dimGradB2(2, -1, -4, 0, -2, 0, 0);
@@ -196,18 +189,11 @@ volVectorField gradB2(
 
 forAll(gradB2, cellI)
 {
-    const scalar y = mesh.C()[cellI].y(); // Get y-coordinate of cell center
-
-    if (y <= 0) // For y <= 0, ensure zero gradient
-    {
-        gradB2[cellI] = vector(0, 0, 0);
-    }
-    else
-    {
-        scalar By = B0 * Foam::exp(-k1 * y); // Example B_y = 0.52 * exp(-100 * y)
-        scalar dBy_dy = -k1 * By;             // Derivative of B_y
-        gradB2[cellI] = vector(0, 2.0 * By * dBy_dy, 0); // Analytical gradient
-    }
+    const vector cellPos = mesh.C()[cellI];             // Get cell center position
+    scalar r = cellPos & gradDir;                       // Project cell position onto gradient direction
+    scalar BMag = B0 * Foam::exp(-k1 * r);              // Example B_y = 0.52 * exp(-100 * y)
+    scalar dBMag_dy = -k1 * BMag;                       // Derivative of B_Mag
+    gradB2[cellI] = 2.0 * BMag * dBMag_dy * gradDir;    // Set gradient of B^2
 }
 
 forAll(gradB2.boundaryField(), patchI)
@@ -217,18 +203,11 @@ forAll(gradB2.boundaryField(), patchI)
 
     forAll(patchField, faceI)
     {
-        const scalar y = faceCenters[faceI].y(); // y-coordinate of the face center
-
-        if (y < 0)
-        {
-            patchField[faceI] = vector(0, 0, 0);
-        }
-        else
-        {
-            scalar By = B0 * Foam::exp(-k1 * y); // Example B_y = 0.52 * exp(-100 * y)
-            scalar dBy_dy = -k1 * By;           // Derivative of B_y
-            patchField[faceI] = vector(0, 2.0 * By * dBy_dy, 0);
-        }
+        const vector facePos = faceCenters[faceI];              // Get face center position
+        scalar r = facePos & gradDir;                           // Project face position onto gradient direction
+        scalar BMag = B0 * Foam::exp(-k1 * r);                  // Example B_y = 0.52 * exp(-100 * y)
+        scalar dBMag_dy = -k1 * BMag;                           // Derivative of B_Mag
+        patchField[faceI] = 2.0 * BMag * dBMag_dy * gradDir;    // Set gradient of B^2
     }
 }
 
