@@ -1,0 +1,6 @@
+source openfoam 9
+go into fluidReactionThermo
+	wclean
+	wmake
+cd into the directory containing solver reactingFoamOmegaLowMach
+wmake reactingFoamOmegaLowMach

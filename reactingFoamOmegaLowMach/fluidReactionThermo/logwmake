@@ -1,0 +1,32 @@
+wmakeLnInclude: linking include files to ./lnInclude
+Making dependency list for source file tabulatedFluidReactionThermophysicalTransportModels.C
+g++ -std=c++14 -m64 -Dlinux64 -DWM_ARCH_OPTION=64 -DWM_DP -DWM_LABEL_SIZE=32 -Wall -Wextra -Wold-style-cast -Wnon-virtual-dtor -Wno-unused-parameter -Wno-invalid-offsetof -Wno-attributes -O3  -DNoRepository -ftemplate-depth-100 -I/opt/openfoam9/src/MomentumTransportModels/momentumTransportModels/lnInclude -I/opt/openfoam9/src/MomentumTransportModels/compressible/lnInclude -I/opt/openfoam9/src/ThermophysicalTransportModels/lnInclude -I/opt/openfoam9/src/thermophysicalModels/specie/lnInclude -I/opt/openfoam9/src/thermophysicalModels/basic/lnInclude -I/opt/openfoam9/src/thermophysicalModels/reactionThermo/lnInclude -I/opt/openfoam9/src/finiteVolume/lnInclude -I/opt/openfoam9/src/meshTools/lnInclude -I/opt/openfoam9/src/ThermophysicalTransportModels/fluidReactionThermo/lnInclude -I/opt/openfoam9/src/transportModels/lnInclude  -IlnInclude -I. -I/opt/openfoam9/src/OpenFOAM/lnInclude -I/opt/openfoam9/src/OSspecific/POSIX/lnInclude   -fPIC -c tabulatedFluidReactionThermophysicalTransportModels.C -o Make/linux64GccDPInt32Opt/tabulatedFluidReactionThermophysicalTransportModels.o
+In file included from lnInclude/TabulatedFickian.H:152,
+                 from lnInclude/TabulatedFickianFourier.H:96,
+                 from tabulatedFluidReactionThermophysicalTransportModels.C:36:
+lnInclude/TabulatedFickian.C: In member function ‘virtual Foam::tmp<Foam::GeometricField<double, Foam::fvsPatchField, Foam::surfaceMesh> > Foam::TabulatedFickian<BasicThermophysicalTransportModel>::j(const volScalarField&) const’:
+lnInclude/TabulatedFickian.C:364:56: error: cannot convert ‘const Foam::word’ to ‘const volScalarField&’ {aka ‘const Foam::GeometricField<double, Foam::fvPatchField, Foam::volMesh>&’}
+  364 |         const label YiIndex = composition.index(Yi.name());
+      |                                                 ~~~~~~~^~
+      |                                                        |
+      |                                                        const Foam::word
+In file included from /opt/openfoam9/src/thermophysicalModels/reactionThermo/lnInclude/basicSpecieMixture.H:328,
+                 from /opt/openfoam9/src/thermophysicalModels/reactionThermo/lnInclude/fluidReactionThermo.H:42,
+                 from /opt/openfoam9/src/ThermophysicalTransportModels/lnInclude/fluidReactionThermophysicalTransportModel.H:45,
+                 from /opt/openfoam9/src/ThermophysicalTransportModels/lnInclude/fluidReactionThermophysicalTransportModels.H:26,
+                 from tabulatedFluidReactionThermophysicalTransportModels.C:26:
+/opt/openfoam9/src/thermophysicalModels/reactionThermo/lnInclude/basicSpecieMixtureI.H:124:27: note:   initializing argument 1 of ‘Foam::label Foam::basicSpecieMixture::index(const volScalarField&) const’
+  124 |     const volScalarField& Yi
+      |     ~~~~~~~~~~~~~~~~~~~~~~^~
+In file included from lnInclude/TabulatedFickian.H:152,
+                 from lnInclude/TabulatedFickianFourier.H:96,
+                 from tabulatedFluidReactionThermophysicalTransportModels.C:36:
+lnInclude/TabulatedFickian.C: In member function ‘Foam::tmp<Foam::GeometricField<double, Foam::fvsPatchField, Foam::surfaceMesh> > Foam::TabulatedFickian<BasicThermophysicalTransportModel>::j(const volScalarField&) const [with BasicThermophysicalTransportModel = Foam::laminarThermophysicalTransportModels::unityLewisFourier<Foam::ThermophysicalTransportModel<Foam::CompressibleMomentumTransportModel<Foam::dynamicTransportModel>, Foam::fluidReactionThermo> >]’:
+lnInclude/TabulatedFickian.C:404:1: warning: control reaches end of non-void function [-Wreturn-type]
+  404 | }
+      | ^
+lnInclude/TabulatedFickian.C: In member function ‘Foam::tmp<Foam::GeometricField<double, Foam::fvsPatchField, Foam::surfaceMesh> > Foam::TabulatedFickian<BasicThermophysicalTransportModel>::j(const volScalarField&) const [with BasicThermophysicalTransportModel = Foam::turbulenceThermophysicalTransportModels::unityLewisEddyDiffusivity<Foam::RASThermophysicalTransportModel<Foam::ThermophysicalTransportModel<Foam::CompressibleMomentumTransportModel<Foam::dynamicTransportModel>, Foam::fluidReactionThermo> > >]’:
+lnInclude/TabulatedFickian.C:404:1: warning: control reaches end of non-void function [-Wreturn-type]
+lnInclude/TabulatedFickian.C: In member function ‘Foam::tmp<Foam::GeometricField<double, Foam::fvsPatchField, Foam::surfaceMesh> > Foam::TabulatedFickian<BasicThermophysicalTransportModel>::j(const volScalarField&) const [with BasicThermophysicalTransportModel = Foam::turbulenceThermophysicalTransportModels::unityLewisEddyDiffusivity<Foam::LESThermophysicalTransportModel<Foam::ThermophysicalTransportModel<Foam::CompressibleMomentumTransportModel<Foam::dynamicTransportModel>, Foam::fluidReactionThermo> > >]’:
+lnInclude/TabulatedFickian.C:404:1: warning: control reaches end of non-void function [-Wreturn-type]
+make: *** [/opt/openfoam9/wmake/rules/General/transform:26: Make/linux64GccDPInt32Opt/tabulatedFluidReactionThermophysicalTransportModels.o] Error 1

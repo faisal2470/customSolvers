@@ -1,0 +1,3 @@
+SOURCE += tabulatedFluidReactionThermophysicalTransportModels.C
+
+LIB = $(FOAM_USER_LIBBIN)/libtabulatedFluidReactionThermophysicalTransportModels
