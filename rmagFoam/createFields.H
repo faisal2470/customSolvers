@@ -232,7 +232,7 @@ dimensionedScalar k("k", dimEnergy / dimTemperature, 1.38e-23);
 const dimensionSet dimPermeability = dimForce / (dimCurrent * dimCurrent);
 dimensionedScalar mu0("mu0", dimPermeability, 4 * M_PI * 1e-7);
 
-// Loop over species and create individual chi and magneticForce fields
+// Loop over species and create individual chi and bodyForce fields
 
 const dimensionSet dimMolarMass(1, 0, 0, 0, 0, -1, 0); // kg/mol
 const dimensionSet dimVolumePerMass( -1, 3, 0, 0, 0, 0, 0);
@@ -257,10 +257,10 @@ forAll(Y, i)
         dimensionedScalar("zero", dimless, 0.0)
     );
 
-    // Create and register magneticForce field without assigning to a variable
+    // Create and register bodyForce field without assigning to a variable
     new volVectorField(
         IOobject(
-            "magneticForce_" + speciesName,
+            "bodyForce_" + speciesName,
             runTime.timeName(),
             mesh,
             IOobject::NO_READ,
@@ -283,7 +283,5 @@ forAll(Y, i)
         mesh,
         dimensionedVector("zero", dimVelocity, vector::zero)
     );
-
-    // Store magneticForce in the object registry
 
 }

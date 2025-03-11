@@ -8,7 +8,7 @@ thermo.correct();
 
 
 
-// Update chi and magneticForce for each species based on the updated temperature
+// Update chi and bodyForce for each species based on the updated temperature
 forAll(Y, i)
 {
     const word &speciesName = Y[i].name();
@@ -23,42 +23,42 @@ forAll(Y, i)
         speciesSubDict.lookupOrDefault<scalar>("mi", 1.0e-3)
     );
 
-    // Retrieve the chi and magneticForce fields for each species
+    // Retrieve the chi and bodyForce fields for each species
     volScalarField &chi = const_cast<volScalarField&>(
         mesh.lookupObject<volScalarField>("chi_" + speciesName)
     );
-    volVectorField &magneticForce = const_cast<volVectorField&>(
-        mesh.lookupObject<volVectorField>("magneticForce_" + speciesName)
+    volVectorField &bodyForce = const_cast<volVectorField&>(
+        mesh.lookupObject<volVectorField>("bodyForce_" + speciesName)
     );
 
     // Update chi based on the current temperature
     //const scalar T_min = SMALL; // Prevent division by zero
 
-    
+
     forAll(chi, cellI)
     {
         scalar T_cell = thermo.T()[cellI];
-           
+
         chi[cellI] = (NA.value() * pow(gL.value(), 2) * pow(muB.value(), 2) * Si * (Si + 1) * mu0.value())
                      / (3 * k.value() * T_cell * mi.value());
        //Info<<"T_cell = " <<T[cellI]<<" for chi = "<<chi[cellI]<<endl;
-       
-       
+
+
     }
-    
-    // Update magneticForce based on the updated chi and grad(B^2)
-    forAll(magneticForce, cellI)
+
+    // Update bodyForce based on the updated chi and grad(B^2)
+    forAll(bodyForce, cellI)
 {
     //const scalar y = mesh.C()[cellI].y(); // Get the y-coordinate of the cell center
 
     // Check if gradB2 has meaningful values
-         
+
 
     // Compute the magnetic force
-    magneticForce[cellI] = (0.5 / mu0.value() * chi[cellI] * gradB2[cellI]) + g;
+    bodyForce[cellI] = (0.5 / mu0.value() * chi[cellI] * gradB2[cellI]) + g;
 
-    // Debug the magneticForce value
+    // Debug the bodyForce value
 
 }
-    
+
 }
