@@ -197,7 +197,7 @@ forAll(B.boundaryField(), patchI)
 
 // Create the gradient of B^2 field
 Info << "Creating gradient of B^2 field\n" << endl;
-const dimensionSet dimGradB2(2, -1, -4, 0, -2, 0, 0);
+const dimensionSet dimGradB2(2, -1, -4, 0, 0, -2, 0);
 
 volVectorField gradB2(
     IOobject(
