@@ -112,6 +112,20 @@ volScalarField Qdot
 #include "createMRF.H"
 #include "createFvOptions.H"
 
+// Create the gravity field
+Info << "Creating gravity field g\n" << endl;
+uniformDimensionedVectorField g
+(
+    IOobject
+    (
+        "g",
+        mesh.time().constant(),
+        mesh,
+        IOobject::MUST_READ,
+        IOobject::NO_WRITE
+    )
+);
+
 //Magnetic field block
 Info << "Reading magnetic Properties\n" << endl;
 
