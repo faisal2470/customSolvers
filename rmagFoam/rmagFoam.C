@@ -26,7 +26,7 @@ Application
 
 Description
     Solver for combustion with chemical reactions incorporating the effects of magnetic Fields
-	
+
 Vaibhav M N - TU Delft
 
 \*---------------------------------------------------------------------------*/
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
             #include "UEqn.H"
             #include "YEqn.H"
             #include "EEqn.H"
-            #include "updateMagneticProperties.H"
+            #include "updateBodyForce.H"
             // --- Pressure corrector loop
             while (pimple.correct())
             {
