@@ -32,6 +32,23 @@ tmp<fv::convectionScheme<scalar>> mvConvection(
     )
 );
 
+// Precompute total weighted body force
+volVectorField totalWeightedForce(
+    IOobject(
+        "totalWeightedForce",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE),
+    mesh,
+    dimensionedVector("zero", dimLength/dimTime/dimTime, vector::zero)
+);
+
+forAll(Y, j){
+    const volVectorField &bodyForce_Yj = mesh.lookupObject<volVectorField>("bodyForce_" + Y[j].name());
+    totalWeightedForce += Y[j] * bodyForce_Yj;
+}
+
 // Compute the reaction rate and heat release
 reaction->correct();
 Qdot = reaction->Qdot();
@@ -39,10 +56,11 @@ volScalarField Yt(0.0 * Y[0]);
 
 forAll(Y, i){
     if (i != inertIndex && composition.active(i)){
+
         volScalarField &Yi = Y[i];
         const word &speciesName = Y[i].name();
 
-        // Access predefined magnetic force field as const reference
+        // Initialize the summation term for species i
         const volVectorField &bodyForce_Yi = mesh.lookupObject<volVectorField>("bodyForce_" + Yi.name());
         volVectorField summationTerm(
             IOobject(
@@ -55,18 +73,13 @@ forAll(Y, i){
             dimensionedVector("zero", dimLength / dimTime / dimTime, vector::zero) // Initialize to zero
         );
 
-        forAll(Y, j){
-            volScalarField &Yj = Y[j];
+        // Access predefined body force field as const reference
+        const volVectorField &bodyForce_Yi = mesh.lookupObject<volVectorField>("bodyForce_" + Yi.name());
 
-            if (i != j){
-                // Use const references for chi_Yj and bodyForce_Yj, and remove chi_Yj if unused
-                const volVectorField &bodyForce_Yj = mesh.lookupObject<volVectorField>("bodyForce_" + Y[j].name());
+        // Compute the summation term for species i
+        summationTerm = (scalar(1) - Yi) * bodyForce_Yi - (totalWeightedForce - Yi * bodyForce_Yi);
 
-                // Add Y_i * Y_j * (f_i - f_j) to the summation term
-                summationTerm += Yj * (bodyForce_Yi - bodyForce_Yj);
-            }
-        }
-
+        // Initialize the scaling factor for species i
         volScalarField scalingFactor(
             IOobject(
                 "scalingFactor_" + Yi.name(),
@@ -78,7 +91,8 @@ forAll(Y, i){
             dimensionedScalar("scalingFactor", dimScalingFactor, 0.0) // Initialize with zero
         );
         scalingFactor = thermo.composition().W(i) * rho / (meanMolarMass * p);
-        // Compute the modified diffusion velocity for species i
+
+        // Initialize the magnetic diffusion fkux for species i
         volVectorField magdiff_Yi(
             IOobject(
                 "magdiff" + Yi.name(),

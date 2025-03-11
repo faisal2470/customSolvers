@@ -9,8 +9,7 @@ if (!mesh.foundObject<uniformDimensionedVectorField>("g"))
 
 const uniformDimensionedVectorField& g = mesh.lookupObject<uniformDimensionedVectorField>("g");
 const volVectorField& gradB2 = mesh.lookupObject<volVectorField>("gradB2");
-forAll(Y, i)
-{
+forAll(Y, i){
     const word &speciesName = Y[i].name();
 
     // Retrieve the chi and bodyForce fields for each species
