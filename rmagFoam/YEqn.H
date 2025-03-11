@@ -55,12 +55,10 @@ forAll(Y, i){
             dimensionedVector("zero", dimLength / dimTime / dimTime, vector::zero) // Initialize to zero
         );
 
-        forAll(Y, j)
-        {
+        forAll(Y, j){
             volScalarField &Yj = Y[j];
 
-            if (i != j)
-            {
+            if (i != j){
                 // Use const references for chi_Yj and bodyForce_Yj, and remove chi_Yj if unused
                 const volVectorField &bodyForce_Yj = mesh.lookupObject<volVectorField>("bodyForce_" + Y[j].name());
 

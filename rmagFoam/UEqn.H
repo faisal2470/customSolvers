@@ -15,8 +15,7 @@ volVectorField bodyForceMom(
     dimensionedVector("zero", dimForce / dimVolume / dimrho, vector::zero) // Initialize to zero
 );
 
-forAll(Y, i)
-{
+forAll(Y, i){
     volScalarField &Yi = Y[i];
 
     // Check if bodyForce_Yi is available before accessing it

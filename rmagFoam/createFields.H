@@ -146,6 +146,7 @@ vector gradDir = magneticProperties.lookupOrDefault<vector>("gradDir", vector(0,
 // Assign dimensions [M, L, T, K, N, A, J]
 dimensionedScalar B0("B0", dimensionSet(1, 0, -2, 0, 0, -1, 0), B0_value); // [T]
 dimensionedScalar k1("k1", dimensionSet(0, -1, 0, 0, 0, 0, 0), k1_value);  // [m^-1]
+const dimensionSet dimrho(1, -3, 0, 0, 0, 0, 0);                           // [kg m^-3]
 
 // Normalize the gradient direction
 scalar gradMag = mag(gradDir);
@@ -262,7 +263,7 @@ forAll(Y, i)
             true // registerObject = true
         ),
         mesh,
-        dimensionedScalar("zero", dimless, 0.0)
+        dimensionedScalar("zero", dimless / dimrho, 0.0)
     );
 
     // Create and register bodyForce field without assigning to a variable
