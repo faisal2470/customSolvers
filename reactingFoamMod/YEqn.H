@@ -19,12 +19,17 @@ tmp<fv::convectionScheme<scalar>> mvConvection
         if (i != inertIndex && composition.active(i))
         {
             volScalarField& Yi = Y[i];
+            const word &speciesName = Y[i].name();
+
+            volVectorField &diffFlux_Yi = const_cast<volVectorField &>(mesh.lookupObject<volVectorField>("diffFlux_" + speciesName));
+
+            diffFlux_Yi = -(turbulence->alphaEff() * fvc::grad(Yi)) / rho;
 
             fvScalarMatrix YiEqn
             (
                 fvm::ddt(rho, Yi)
               + mvConvection->fvmDiv(phi, Yi)
-              - fvm::laplacian(turbulence->muEff(), Yi)
+              - fvm::laplacian(turbulence->alphaEff(), Yi)
              ==
                 reaction->R(Yi)
               + fvOptions(rho, Yi)

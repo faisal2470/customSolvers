@@ -108,3 +108,22 @@ volScalarField Qdot
 
 #include "createMRF.H"
 #include "createFvOptions.H"
+
+forAll(Y, i)
+{
+    const word &speciesName = Y[i].name();
+
+    new volVectorField(
+        IOobject(
+            "diffFlux_" + speciesName,
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE,
+            true // registerObject = true
+        ),
+        mesh,
+        dimensionedVector("zero", dimVelocity, vector::zero)
+    );
+
+}
