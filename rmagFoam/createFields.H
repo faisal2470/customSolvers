@@ -112,6 +112,22 @@ volScalarField Qdot
 #include "createMRF.H"
 #include "createFvOptions.H"
 
+// Create the gravity field
+Info << "Creating gravity field g\n" << endl;
+uniformDimensionedVectorField g
+(
+    IOobject
+    (
+        "g",
+        mesh.time().constant(),
+        mesh,
+        IOobject::MUST_READ,
+        IOobject::NO_WRITE
+    )
+);
+
+//Magnetic field block
+Info << "Reading magnetic Properties\n" << endl;
 
 IOdictionary magneticProperties(
     IOobject(
@@ -119,16 +135,43 @@ IOdictionary magneticProperties(
         runTime.constant(),
         mesh,
         IOobject::MUST_READ,
-        IOobject::NO_WRITE));
+        IOobject::NO_WRITE
+    )
+);
 
-//Magnetic field block
-Info << "Reading magnetic flux density B\n"
-     << endl;
+scalar B0_value = magneticProperties.lookupOrDefault<scalar>("B0", 0.52);                   // Default to 0.52 T
+scalar k1_value = magneticProperties.lookupOrDefault<scalar>("k1", 120.0);                  // Default to 120 m^-1
+vector gradDir = magneticProperties.lookupOrDefault<vector>("gradDir", vector(0, 1, 0));    // Default to (0, 1, 0)
 
-scalar B0 = magneticProperties.lookupOrDefault<scalar>("B0", 0.52);
-scalar k1 = magneticProperties.lookupOrDefault<scalar>("k1", 120.0);// Default to 100 mm^-1
+// Assign dimensions [M, L, T, K, N, A, J]
+dimensionedScalar B0("B0", dimensionSet(1, 0, -2, 0, 0, -1, 0), B0_value); // [T]
+dimensionedScalar k1("k1", dimensionSet(0, -1, 0, 0, 0, 0, 0), k1_value);  // [m^-1]
+const dimensionSet dimrho(1, -3, 0, 0, 0, 0, 0);                           // [kg m^-3]
 
-const dimensionSet dimMagneticField(1, 0, -2, 0, 0, -1, 0); // Tesla
+// Normalize the gradient direction
+scalar gradMag = mag(gradDir);
+if (gradMag < SMALL) gradMag = 1.0;     // Avoid division by zero
+gradDir /= gradMag;
+
+Info << "Configured B0: " << B0 << " T" << endl;
+Info << "Configured k1: " << k1 << " mm^-1" << endl;
+Info << "Configured gradDir: " << gradDir << endl;
+
+// Compute projection r = mesh.C() & gradDir
+volScalarField r(
+    IOobject(
+        "r",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh.C() & gradDir
+);
+
+// Create the magnetic field B and initialize it to zero
+Info << "\nCreating magnetic field B" << endl;
+const dimensionSet dimMagneticField(1, 0, -2, 0, 0, -1, 0);     // Tesla
 volVectorField B(
     IOobject(
         "B",
@@ -139,48 +182,23 @@ volVectorField B(
     mesh,
     dimensionedVector("zero", dimMagneticField, vector::zero) // Initialize with zero values
 );
-Info << "Configured B0: " << B0 << " T" << endl;
-Info << "Configured k1: " << k1 << " mm^-1" << endl;
 
-forAll(B, cellI)
-{
-    const scalar y = mesh.C()[cellI].y(); // Get the y-coordinate of each cell's center
+// Compute B internal field
+// Info << "Computing internal magnetic field\n" << endl;
+B = B0 * Foam::exp(-k1 * r) * gradDir;
 
-    if (y < 0)
-    {
-        B[cellI] = vector(0, B0, 0); // Set B to 0.52 if y < 0
-    }
-    else
-    {
-        B[cellI] = vector(0, B0 * Foam::exp(-k1 * y), 0); // Use the exponential expression if y >= 0
-    }
-
-}
-
+// Compute B boundary field
+// Info << "Computing boundary magnetic field\n" << endl;
 forAll(B.boundaryField(), patchI)
 {
-    fvPatchField<vector>& patchField = const_cast<fvPatchField<vector>&>(B.boundaryField()[patchI]); // Cast away const for modification
-    const pointField& faceCenters = patchField.patch().Cf(); // Get face centers of the patch
+    scalarField rPatch = B.boundaryField()[patchI].patch().Cf() & gradDir; // Project the face centers onto the gradient direction
+    B.boundaryFieldRef()[patchI] = B0.value() * Foam::exp(-k1.value() * rPatch) * gradDir; // Compute the magnetic field on the patch
 
-    forAll(patchField, faceI)
-    {
-        const scalar y = faceCenters[faceI].y(); // y-coordinate of the face center
-
-        if (y < 0)
-        {
-            patchField[faceI] = vector(0, B0, 0);
-        }
-        else
-        {
-            patchField[faceI] = vector(0, B0 * Foam::exp(-k1 * y), 0);
-        }
-    }
 }
 
-
-
-
-const dimensionSet dimGradB2(2, -1, -4, 0, -2, 0, 0);
+// Create the gradient of B^2 field
+Info << "Creating gradient of B^2 field\n" << endl;
+const dimensionSet dimGradB2(2, -1, -4, 0, 0, -2, 0);
 
 volVectorField gradB2(
     IOobject(
@@ -194,71 +212,41 @@ volVectorField gradB2(
     dimensionedVector("zero", dimGradB2, vector::zero) // Set all components to zero
 );
 
-forAll(gradB2, cellI)
-{
-    const scalar y = mesh.C()[cellI].y(); // Get y-coordinate of cell center
+// Compute the gradient of B^2 internal field
+// Info << "Computing internal gradient of B^2 field\n" << endl;
+gradB2 = -2.0 * k1 * B0 * B0 * Foam::exp(-2.0 * k1 * r) * gradDir;
 
-    if (y <= 0) // For y <= 0, ensure zero gradient
-    {
-        gradB2[cellI] = vector(0, 0, 0);
-    }
-    else
-    {
-        scalar By = B0 * Foam::exp(-k1 * y); // Example B_y = 0.52 * exp(-100 * y)
-        scalar dBy_dy = -k1 * By;             // Derivative of B_y
-        gradB2[cellI] = vector(0, 2.0 * By * dBy_dy, 0); // Analytical gradient
-    }
-}
-
+// Compute the gradient of B^2 boundary field
+// Info << "Computing boundary gradient of B^2 field\n" << endl;
 forAll(gradB2.boundaryField(), patchI)
 {
-    fvPatchField<vector>& patchField = const_cast<fvPatchField<vector>&>(gradB2.boundaryField()[patchI]); // Cast away const for modification
-    const pointField& faceCenters = patchField.patch().Cf(); // Get face centers of the patch
+    scalarField rPatch = gradB2.boundaryField()[patchI].patch().Cf() & gradDir;                         // Project the face centers onto the gradient direction
+    gradB2.boundaryFieldRef()[patchI] = -2.0 * (k1 * B0 * B0).value() * Foam::exp(-2.0 * k1.value() * rPatch) * gradDir;  // Compute the gradient of B^2 on the patch
 
-    forAll(patchField, faceI)
-    {
-        const scalar y = faceCenters[faceI].y(); // y-coordinate of the face center
-
-        if (y < 0)
-        {
-            patchField[faceI] = vector(0, 0, 0);
-        }
-        else
-        {
-            scalar By = B0 * Foam::exp(-k1 * y); // Example B_y = 0.52 * exp(-100 * y)
-            scalar dBy_dy = -k1 * By;           // Derivative of B_y
-            patchField[faceI] = vector(0, 2.0 * By * dBy_dy, 0);
-        }
-    }
 }
 
 
-
-const dimensionSet dimInvMole(0, 0, 0, 0, -1, 0, 0); // Dimensions for mol^-1
+// Create dimensioned scalars for physical constants
 
 // Avogadro's number (NA) [1/mol]
+const dimensionSet dimInvMole(0, 0, 0, 0, -1, 0, 0);                        // Dimensions for mol^-1
 dimensionedScalar NA("NA", dimInvMole, 6.022e23);
 
 // Lande's g-factor (dimensionless, so no units are required)
 dimensionedScalar gL("gL", dimless, 2.0); // dimensionless
 
-// Bohr magneton (muB) [J/T] = [M L^2 T^-2 A^-1]
-const dimensionSet dimBohrMagneton = dimEnergy / (dimMagneticField); // [M L^2 T^-2 A^-1]
+// Bohr magneton (muB) [J/T]
+const dimensionSet dimBohrMagneton = dimEnergy / (dimMagneticField);        // [M L^2 T^-2 A^-1]
 dimensionedScalar muB("muB", dimBohrMagneton, 9.274e-24);
 
 // Boltzmann constant (k) [J/K]
 dimensionedScalar k("k", dimEnergy / dimTemperature, 1.38e-23);
 
-// Magnetic permeability of free space (mu0) [H/m] = [M L T^-2 A^-2]
-const dimensionSet dimPermeability = dimForce / (dimCurrent * dimCurrent);
+// Magnetic permeability of free space (mu0) [H/m]
+const dimensionSet dimPermeability = dimForce / (dimCurrent * dimCurrent);  // [M L T^-2 A^-2]
 dimensionedScalar mu0("mu0", dimPermeability, 4 * M_PI * 1e-7);
 
-// Loop over species and create individual chi and magneticForce fields
-
-const dimensionSet dimMolarMass(1, 0, 0, 0, 0, -1, 0); // kg/mol
-const dimensionSet dimVolumePerMass( -1, 3, 0, 0, 0, 0, 0);
-
-
+// Loop over species and create individual chi and bodyForce fields
 forAll(Y, i)
 {
     const word &speciesName = Y[i].name();
@@ -275,13 +263,13 @@ forAll(Y, i)
             true // registerObject = true
         ),
         mesh,
-        dimensionedScalar("zero", dimless, 0.0)
+        dimensionedScalar("zero", dimless / dimrho, 0.0)
     );
 
-    // Create and register magneticForce field without assigning to a variable
+    // Create and register bodyForce field without assigning to a variable
     new volVectorField(
         IOobject(
-            "magneticForce_" + speciesName,
+            "bodyForce_" + speciesName,
             runTime.timeName(),
             mesh,
             IOobject::NO_READ,
@@ -304,7 +292,5 @@ forAll(Y, i)
         mesh,
         dimensionedVector("zero", dimVelocity, vector::zero)
     );
-
-    // Store magneticForce in the object registry
 
 }

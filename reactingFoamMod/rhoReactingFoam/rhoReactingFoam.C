@@ -22,19 +22,18 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    rmagFoam
+    rhoReactingFoam
 
 Description
-    Solver for combustion with chemical reactions incorporating the effects of magnetic Fields
-
-Vaibhav M N - TU Delft
+    Solver for combustion with chemical reactions using density based
+    thermodynamics package.
 
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "turbulentFluidThermoModel.H"
-#include "psiReactionThermo.H"
+#include "rhoReactionThermo.H"
 #include "CombustionModel.H"
+#include "turbulentFluidThermoModel.H"
 #include "multivariateScheme.H"
 #include "pimpleControl.H"
 #include "pressureControl.H"
@@ -52,10 +51,11 @@ int main(int argc, char *argv[])
     #include "createTime.H"
     #include "createMesh.H"
     #include "createControl.H"
-    #include "createTimeControls.H"
     #include "initContinuityErrs.H"
     #include "createFields.H"
     #include "createFieldRefs.H"
+    #include "createRhoUfIfPresent.H"
+    #include "createTimeControls.H"
 
     turbulence->validate();
 
@@ -89,22 +89,23 @@ int main(int argc, char *argv[])
 
         #include "rhoEqn.H"
 
+        // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
             #include "UEqn.H"
             #include "YEqn.H"
             #include "EEqn.H"
-            #include "updateBodyForce.H"
+
             // --- Pressure corrector loop
             while (pimple.correct())
             {
                 if (pimple.consistent())
                 {
-                    #include "pcEqn.H"
+                    #include "../../../compressible/rhoPimpleFoam/pcEqn.H"
                 }
                 else
                 {
-                    #include "pEqn.H"
+                    #include "../../../compressible/rhoPimpleFoam/pEqn.H"
                 }
             }
 

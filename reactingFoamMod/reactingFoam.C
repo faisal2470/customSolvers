@@ -22,12 +22,10 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    rmagFoam
+    reactingFoam
 
 Description
-    Solver for combustion with chemical reactions incorporating the effects of magnetic Fields
-
-Vaibhav M N - TU Delft
+    Solver for combustion with chemical reactions.
 
 \*---------------------------------------------------------------------------*/
 
@@ -94,7 +92,7 @@ int main(int argc, char *argv[])
             #include "UEqn.H"
             #include "YEqn.H"
             #include "EEqn.H"
-            #include "updateBodyForce.H"
+
             // --- Pressure corrector loop
             while (pimple.correct())
             {

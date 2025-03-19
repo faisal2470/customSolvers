@@ -4,9 +4,9 @@ dimensionSet dimrho(1, -3, 0, 0, 0, 0, 0);
 #include "fvcGrad.H"
 #include "fvMatrix.H"
 
-volVectorField magneticForceMom(
+volVectorField bodyForceMom(
     IOobject(
-        "magneticForceMom",
+        "bodyForceMom",
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
@@ -15,28 +15,27 @@ volVectorField magneticForceMom(
     dimensionedVector("zero", dimForce / dimVolume / dimrho, vector::zero) // Initialize to zero
 );
 
-forAll(Y, i)
-{
+forAll(Y, i){
     volScalarField &Yi = Y[i];
 
-    // Check if magneticForce_Yi is available before accessing it
-    const word magneticForceName = "magneticForce_" + Yi.name();
-    if (mesh.foundObject<volVectorField>(magneticForceName))
+    // Check if bodyForce_Yi is available before accessing it
+    const word bodyForceName = "bodyForce_" + Yi.name();
+    if (mesh.foundObject<volVectorField>(bodyForceName))
     {
-        const volVectorField &magneticForce_Yi = mesh.lookupObject<volVectorField>(magneticForceName);
+        const volVectorField &bodyForce_Yi = mesh.lookupObject<volVectorField>(bodyForceName);
 
         // Accumulate the magnetic force for each species, scaled by its fraction Yi
-        magneticForceMom += Yi * magneticForce_Yi;
+        bodyForceMom += Yi * bodyForce_Yi;
     }
     else
     {
-        Info << "Warning: " << magneticForceName << " not found in objectRegistry. Skipping." << endl;
+        Info << "Warning: " << bodyForceName << " not found in objectRegistry. Skipping." << endl;
     }
 }
 
 tmp<fvVectorMatrix> tUEqn(
     fvm::ddt(rho, U) + fvm::div(phi, U) + MRF.DDt(rho, U) + turbulence->divDevRhoReff(U) ==
-    fvOptions(rho, U) + rho * magneticForceMom);
+    fvOptions(rho, U) + rho * bodyForceMom);
 fvVectorMatrix &UEqn = tUEqn.ref();
 
 UEqn.relax();

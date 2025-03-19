@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,22 +22,20 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    rmagFoam
+    rhoReactingBuoyantFoam
 
 Description
-    Solver for combustion with chemical reactions incorporating the effects of magnetic Fields
-
-Vaibhav M N - TU Delft
+    Solver for combustion with chemical reactions using a density based
+    thermodynamics package with enhanced buoyancy treatment.
 
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "turbulentFluidThermoModel.H"
-#include "psiReactionThermo.H"
+#include "rhoReactionThermo.H"
 #include "CombustionModel.H"
+#include "turbulentFluidThermoModel.H"
 #include "multivariateScheme.H"
 #include "pimpleControl.H"
-#include "pressureControl.H"
 #include "fvOptions.H"
 #include "localEulerDdtScheme.H"
 #include "fvcSmooth.H"
@@ -89,23 +87,17 @@ int main(int argc, char *argv[])
 
         #include "rhoEqn.H"
 
+        // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
             #include "UEqn.H"
             #include "YEqn.H"
             #include "EEqn.H"
-            #include "updateBodyForce.H"
+
             // --- Pressure corrector loop
             while (pimple.correct())
             {
-                if (pimple.consistent())
-                {
-                    #include "pcEqn.H"
-                }
-                else
-                {
-                    #include "pEqn.H"
-                }
+                #include "pEqn.H"
             }
 
             if (pimple.turbCorr())
