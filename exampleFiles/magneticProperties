@@ -1,0 +1,77 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      magneticProperties;
+}
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+nFields	2;
+
+field1
+{
+	type	"exp";
+	gradDir	(1 0 0); 	// Default (0, 1, 0)
+	r0    	0.005;    	// Default 0.0
+	rf    	0.01;    	// Default 0.01
+	inv    	0;
+
+	expCoeff
+	{
+    		B0    0.5;    // Magnetic field strength in Tesla (Default 0.52)
+    		k     120;    // Decay constant in m^-1 (Default 120)
+	}
+
+	linCoeff
+	{
+    		B0    0.5;
+    		k     120;
+	}
+}
+
+field2
+{
+	type	"exp";
+	gradDir	(1 0 0); 	// Default (0, 1, 0)
+	r0    	0.0;    	// Default 0.0
+	rf    	0.005;    	// Default 0.01
+	inv    	1;
+
+	expCoeff
+	{
+    		B0    0.5;    // Magnetic field strength in Tesla (Default 0.52)
+    		k     120;    // Decay constant in m^-1 (Default 120)
+	}
+
+	linCoeff
+	{
+    		B0    0.5;
+    		k     120;
+	}
+}
+
+// Magnetic properties for each species
+speciesProperties
+{
+    H2      { Si 0.0;        mi 2.016e-3; }    // Hydrogen
+    H       { Si 0.5;        mi 1.008e-3; }
+    O       { Si 1.0;        mi 16.0e-3; }
+    O2      { Si 1.0;        mi 32.0e-3; }     // Oxygen
+    OH      { Si 0.5;        mi 17.008e-3; }
+    H2O     { Si 0.0;        mi 18.016e-3; }   // Water
+    HO2     { Si 0.5;        mi 33.006e-3; }
+    H2O2    { Si 0.0;        mi 34.014e-3; }
+    N2      { Si 0.0;        mi 28.014e-3; }   // Nitrogen
+    O3      { Si 0.0;        mi 48.0e-3; }	
+    AR      { Si 0.0;        mi 39.948e-3; }
+    HE      { Si 0.0;        mi 4.003e-3; }	   
+}
