@@ -1,1 +1,3 @@
-# customSolvers
+# Custom Solvers
+
+## rmagFoam
