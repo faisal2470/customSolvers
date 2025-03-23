@@ -91,10 +91,10 @@ int main(int argc, char *argv[])
 
         while (pimple.loop())
         {
+            #include "updateBodyForce.H"
             #include "UEqn.H"
             #include "YEqn.H"
             #include "EEqn.H"
-            #include "updateBodyForce.H"
             // --- Pressure corrector loop
             while (pimple.correct())
             {
