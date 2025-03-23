@@ -59,11 +59,11 @@ for (int fieldI = 1; fieldI <= nFields; fieldI++)
     Info << "\nDefining " << fieldName << endl;
     const dictionary& fieldDict = magneticProperties.subDict(fieldName);
 
-    string fieldType = fieldDict.lookupOrDefault<word>("type", "exp"); // Default to exp if not found
-    vector gradDir = fieldDict.lookupOrDefault<vector>("gradDir", vector(0, 1, 0)); // Default to (0, 1, 0)
-    dimensionedScalar r0("r0", dimensionSet(0, 1, 0, 0, 0, 0, 0), fieldDict.lookupOrDefault<scalar>("r0", 0.0));
-    dimensionedScalar rf("rf", dimensionSet(0, 1, 0, 0, 0, 0, 0), fieldDict.lookupOrDefault<scalar>("rf", 0.01));
-    bool inv = fieldDict.lookupOrDefault<int>("inv", 0) == 1;
+    string fieldType = fieldDict.lookupOrDefault<word>("type", "exp");                                              // Default to exp if not found
+    vector gradDir = fieldDict.lookupOrDefault<vector>("gradDir", vector(0, 1, 0));                                 // Default to (0, 1, 0)
+    dimensionedScalar r0("r0", dimensionSet(0, 1, 0, 0, 0, 0, 0), fieldDict.lookupOrDefault<scalar>("r0", 0.0));    // Default to 0.0
+    dimensionedScalar rf("rf", dimensionSet(0, 1, 0, 0, 0, 0, 0), fieldDict.lookupOrDefault<scalar>("rf", 0.01));   // Default to 0.01
+    bool inv = fieldDict.lookupOrDefault<int>("inv", 0) == 1;                                                       // Default to false
 
     if (r0.value() >= rf.value())
     {
@@ -87,8 +87,8 @@ for (int fieldI = 1; fieldI <= nFields; fieldI++)
     if (fieldType == "exp")
     {
         const dictionary& expDict = fieldDict.subDict("expCoeff");
-        B0 = dimensionedScalar("B0", dimMagneticField, expDict.lookupOrDefault<scalar>("B0", 0.52));
-        k = dimensionedScalar("k", dimensionSet(0, -1, 0, 0, 0, 0, 0), expDict.lookupOrDefault<scalar>("k", 120.0));
+        B0 = dimensionedScalar("B0", dimMagneticField, expDict.lookupOrDefault<scalar>("B0", 0.52));                    // Default to 0.52 T
+        k = dimensionedScalar("k", dimensionSet(0, -1, 0, 0, 0, 0, 0), expDict.lookupOrDefault<scalar>("k", 120.0));    // Default to 120 m^-1
         Info << "\tB0: " << B0.value() << " T" << endl;
         Info << "\tk: " << k.value() << " m^-1" << endl;
 
@@ -124,8 +124,8 @@ for (int fieldI = 1; fieldI <= nFields; fieldI++)
     else if (fieldType == "lin")
     {
         const dictionary& linDict = fieldDict.subDict("linCoeff");
-        B0 = dimensionedScalar("B0", dimMagneticField, linDict.lookupOrDefault<scalar>("B0", 0.52));
-        k = dimensionedScalar("k", dimensionSet(0, -1, 0, 0, 0, 0, 0), linDict.lookupOrDefault<scalar>("k", 0.0));
+        B0 = dimensionedScalar("B0", dimMagneticField, linDict.lookupOrDefault<scalar>("B0", 0.52));                // Default to 0.52 T
+        k = dimensionedScalar("k", dimensionSet(0, -1, 0, 0, 0, 0, 0), linDict.lookupOrDefault<scalar>("k", 0.0));  // Default to 0.0 m^-1
         Info << "\tB0: " << B0.value() << " T" << endl;
         Info << "\tk: " << k.value() << " m^-1" << endl;
 
