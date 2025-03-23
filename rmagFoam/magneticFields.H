@@ -121,27 +121,6 @@ for (int fieldI = 1; fieldI <= nFields; fieldI++)
         ) * gradDir;
         gradB2 += gradB2_field;
 
-        // Compute Boundary field for this field
-        forAll(B.boundaryField(), patchI)
-        {
-            scalarField rPatch = B.boundaryField()[patchI].patch().Cf() & gradDir; // Project the face centers onto the gradient direction
-            vectorField B_patch = (
-                inv
-                ? pos(rPatch - r0.value() + smallOffset.value()) * pos(rf.value() - rPatch + smallOffset.value()) * B0.value() * Foam::exp(-k.value() * (rf.value() - rPatch))
-                : pos(rPatch - r0.value() + smallOffset.value()) * pos(rf.value() - rPatch + smallOffset.value()) * B0.value() * Foam::exp(-k.value() * (rPatch - r0.value()))
-            ) * gradDir; // Compute the magnetic field on the patch
-            Info << "Patch " << patchI << ": rPatch = " << rPatch << ", B_patch = " << B.boundaryField()[patchI] << endl;
-            B.boundaryFieldRef()[patchI] += B_patch;
-            Info << "B_patch = " << B.boundaryField()[patchI] << endl;
-
-
-            vectorField gradB2_patch = (
-                inv
-                ? 2.0 * pos(rPatch - r0.value() + smallOffset.value()) * pos(rf.value() - rPatch + smallOffset.value()) * (k * B0 * B0).value() * Foam::exp(-2.0 * k.value() * (rf.value() - rPatch))
-                : -2.0 * pos(rPatch - r0.value() + smallOffset.value()) * pos(rf.value() - rPatch + smallOffset.value()) * (k * B0 * B0).value() * Foam::exp(-2.0 * k.value() * (rPatch - r0.value()))
-            ) * gradDir; // Compute the gradient of B^2 on the patch
-            gradB2.boundaryFieldRef()[patchI] += gradB2_patch;
-        }
     }
     else
     {

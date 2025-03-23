@@ -25,13 +25,5 @@ forAll(Y, i){
     // Info << "Updating bodyForce for species " << speciesName << endl;
     bodyForce = (0.5 / mu0) * chi * gradB2 + g;
 
-    // Update bodyForce for the boundary patches
-    // Info << "Updating bodyForce for boundary patches\n" << endl;
-    forAll(bodyForce.boundaryField(), patchI)
-    {
-        bodyForce.boundaryFieldRef()[patchI] = (0.5 / mu0.value()) * chi.boundaryField()[patchI] * gradB2.boundaryField()[patchI] + g.value();
-
-    }
-
 }
 

@@ -26,12 +26,4 @@ forAll(Y, i){
     // Update chi internal field
     chi = (1000 * NA * pow(gL, 2) * pow(muB, 2) * Si * (Si + 1) * mu0) / (3 * k * thermo.T() * W_i);
 
-    // Update chi boundary field
-    forAll(chi.boundaryField(), patchI)
-    {
-        chi.boundaryFieldRef()[patchI] = (1000 * NA.value() * pow(gL.value(), 2) * pow(muB.value(), 2) * Si * (Si + 1) * mu0.value())
-                                            / (3 * k.value() * thermo.T().boundaryField()[patchI] * W_i.value());
-
-    }
-
 }
