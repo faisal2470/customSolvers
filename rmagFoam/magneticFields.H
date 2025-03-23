@@ -87,7 +87,7 @@ for (int fieldI = 1; fieldI <= nFields; fieldI++)
 
     if (fieldType == "exp")
     {
-        const dictionary &expDict = fieldDict.subDict("exp");
+        const dictionary &expDict = fieldDict.subDict("expCoeff");
         B0 = dimensionedScalar("B0", dimMagneticField, expDict.lookupOrDefault<scalar>("B0", 0.52));
         k = dimensionedScalar("k", dimensionSet(0, -1, 0, 0, 0, 0, 0), expDict.lookupOrDefault<scalar>("k", 120.0));
         Info << "\tB0: " << B0.value() << " T" << endl;
@@ -118,6 +118,43 @@ for (int fieldI = 1; fieldI <= nFields; fieldI++)
             inv
             ? 2.0 * pos(r - r0 + smallOffset) * pos(rf - r + smallOffset) * k * B0 * B0 * Foam::exp(-2.0 * k * (rf - r))
             : -2.0 * pos(r - r0 + smallOffset) * pos(rf - r + smallOffset) * k * B0 * B0 * Foam::exp(-2.0 * k * (r - r0))
+        ) * gradDir;
+        gradB2 += gradB2_field;
+
+    }
+    else if (fieldType == "lin")
+    {
+        const dictionary &linDict = fieldDict.subDict("linCoeff");
+        B0 = dimensionedScalar("B0", dimMagneticField, linDict.lookupOrDefault<scalar>("B0", 0.52));
+        k = dimensionedScalar("k", dimensionSet(0, -1, 0, 0, 0, 0, 0), linDict.lookupOrDefault<scalar>("k", 120.0));
+        Info << "\tB0: " << B0.value() << " T" << endl;
+        Info << "\tk: " << k.value() << " m^-1" << endl;
+
+        // Compute projection r = mesh.C() & gradDir
+        volScalarField r(
+            IOobject(
+                "r",
+                runTime.timeName(),
+                mesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh.C() & gradDir
+        );
+
+        // Compute B contribution for this field
+        volVectorField B_field = (
+            inv
+            ? pos(r - r0 + smallOffset) * pos(rf - r + smallOffset) * B0 * (1.0 + k * (rf - r))
+            : pos(r - r0 + smallOffset) * pos(rf - r + smallOffset) * B0 * (1.0 + k * (r - r0))
+        ) * gradDir;
+        B += B_field;
+
+        // Compute gradB2 contribution for this field
+        volVectorField gradB2_field = (
+            inv
+            ? -2.0 * pos(r - r0 + smallOffset) * pos(rf - r + smallOffset) * k * B0 * B0 * (1.0 + k * (rf - r))
+            : 2.0 * pos(r - r0 + smallOffset) * pos(rf - r + smallOffset) * k * B0 * B0 * (1.0 + k * (r - r0))
         ) * gradDir;
         gradB2 += gradB2_field;
 
