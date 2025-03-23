@@ -114,7 +114,7 @@ volScalarField Qdot
 #include "magneticFields.H"
 
 // Create the gravity field
-Info << "Creating gravity field g\n" << endl;
+Info << "\nCreating gravity field g\n" << endl;
 uniformDimensionedVectorField g
 (
     IOobject
@@ -127,9 +127,10 @@ uniformDimensionedVectorField g
     )
 );
 
-
-
 // Create dimensioned scalars for physical constants
+
+// Density (rho) [kg m^-3]
+const dimensionSet dimrho(1, -3, 0, 0, 0, 0, 0);                            // [kg m^-3]
 
 // Avogadro's number (NA) [1/mol]
 const dimensionSet dimInvMole(0, 0, 0, 0, -1, 0, 0);                        // Dimensions for mol^-1

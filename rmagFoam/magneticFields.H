@@ -1,5 +1,5 @@
 // Create the magnetic field B and initialize it to zero
-Info << "\nCreating magnetic field B" << endl;
+Info << "\nInitialising magnetic field B" << endl;
 const dimensionSet dimMagneticField(1, 0, -2, 0, 0, -1, 0);     // Tesla
 volVectorField B(
     IOobject(
@@ -13,7 +13,7 @@ volVectorField B(
 );
 
 // Create the gradient of B^2 field
-Info << "Creating gradient of B^2 field\n" << endl;
+Info << "Initialising gradient of B^2 field\n" << endl;
 const dimensionSet dimGradB2(2, -1, -4, 0, 0, -2, 0);
 volVectorField gradB2(
     IOobject(
@@ -21,7 +21,7 @@ volVectorField gradB2(
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
-        IOobject::NO_WRITE
+        IOobject::AUTO_WRITE
     ),
     mesh,
     dimensionedVector("zero", dimGradB2, vector::zero) // Set all components to zero
@@ -56,20 +56,19 @@ for (int fieldI = 1; fieldI <= nFields; fieldI++)
             << "Please define all fields from field1 to field" << nFields << "." << exit(FatalError);
     }
 
-    Info << "\nDefining " << fieldI << endl;
-    const dictionary &fieldDict = magneticProperties.subDict(fieldName);
+    Info << "\nDefining " << fieldName << endl;
+    const dictionary& fieldDict = magneticProperties.subDict(fieldName);
 
-    word fieldType = fieldDict.lookupOrDefault<word>("type", "exp"); // Default to exp if not found
+    string fieldType = fieldDict.lookupOrDefault<word>("type", "exp"); // Default to exp if not found
     vector gradDir = fieldDict.lookupOrDefault<vector>("gradDir", vector(0, 1, 0)); // Default to (0, 1, 0)
     dimensionedScalar r0("r0", dimensionSet(0, 1, 0, 0, 0, 0, 0), fieldDict.lookupOrDefault<scalar>("r0", 0.0));
     dimensionedScalar rf("rf", dimensionSet(0, 1, 0, 0, 0, 0, 0), fieldDict.lookupOrDefault<scalar>("rf", 0.01));
     bool inv = fieldDict.lookupOrDefault<int>("inv", 0) == 1;
 
-    if (r0.value() > rf.value())
+    if (r0.value() >= rf.value())
     {
-        FatalErrorIn("magneticFields.H")
-            << "Field " << fieldI << " has r0 = " << r0 << " > rf = " << rf << endl
-            << "Please ensure r0 <= rf for all fields." << exit(FatalError);
+        FatalErrorIn("magneticFields") << "The value of r0 must be less than rf" << endl;
+        exit(FatalError);
     }
 
     scalar gradMag = mag(gradDir);
@@ -87,7 +86,7 @@ for (int fieldI = 1; fieldI <= nFields; fieldI++)
 
     if (fieldType == "exp")
     {
-        const dictionary &expDict = fieldDict.subDict("expCoeff");
+        const dictionary& expDict = fieldDict.subDict("expCoeff");
         B0 = dimensionedScalar("B0", dimMagneticField, expDict.lookupOrDefault<scalar>("B0", 0.52));
         k = dimensionedScalar("k", dimensionSet(0, -1, 0, 0, 0, 0, 0), expDict.lookupOrDefault<scalar>("k", 120.0));
         Info << "\tB0: " << B0.value() << " T" << endl;
@@ -96,7 +95,7 @@ for (int fieldI = 1; fieldI <= nFields; fieldI++)
         // Compute projection r = mesh.C() & gradDir
         volScalarField r(
             IOobject(
-                "r",
+                fieldName + "_r",
                 runTime.timeName(),
                 mesh,
                 IOobject::NO_READ,
@@ -124,16 +123,16 @@ for (int fieldI = 1; fieldI <= nFields; fieldI++)
     }
     else if (fieldType == "lin")
     {
-        const dictionary &linDict = fieldDict.subDict("linCoeff");
+        const dictionary& linDict = fieldDict.subDict("linCoeff");
         B0 = dimensionedScalar("B0", dimMagneticField, linDict.lookupOrDefault<scalar>("B0", 0.52));
-        k = dimensionedScalar("k", dimensionSet(0, -1, 0, 0, 0, 0, 0), linDict.lookupOrDefault<scalar>("k", 120.0));
+        k = dimensionedScalar("k", dimensionSet(0, -1, 0, 0, 0, 0, 0), linDict.lookupOrDefault<scalar>("k", 0.0));
         Info << "\tB0: " << B0.value() << " T" << endl;
         Info << "\tk: " << k.value() << " m^-1" << endl;
 
         // Compute projection r = mesh.C() & gradDir
         volScalarField r(
             IOobject(
-                "r",
+                fieldName + "_r",
                 runTime.timeName(),
                 mesh,
                 IOobject::NO_READ,

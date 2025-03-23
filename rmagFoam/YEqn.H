@@ -61,7 +61,6 @@ forAll(Y, i){
         const word &speciesName = Y[i].name();
 
         // Initialize the summation term for species i
-        const volVectorField &bodyForce_Yi = mesh.lookupObject<volVectorField>("bodyForce_" + Yi.name());
         volVectorField summationTerm(
             IOobject(
                 "summationTerm",
